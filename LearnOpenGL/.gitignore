@@ -1,0 +1,50 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Others
+GeneratedFiles
+Debug
+Release
+*.suo
+*.sdf
+*.opensdf
+*.opendb
+
+# cmake
+CMakeCache.txt
+*.bin
+*.cmake
+*.rule
+*.log
+*.cxx
+*.check_cache
+*.stamp
+*.depend
+*.list
+*.db
