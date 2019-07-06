@@ -6,6 +6,10 @@
 #include "shader.h"
 #include <stb_image.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #pragma comment(lib, "glfw3.lib")
 
 
@@ -38,7 +42,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // 创建一个窗口对象, 这个窗口对象存放了所有和窗口相关的数据, 而且会被GLFW的其他函数频繁地用到
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Test textures", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Test transformations", NULL, NULL);
     if (window == NULL) {
         printf("Failed to create GLFW window!\n");
         glfwTerminate();
@@ -60,7 +64,7 @@ int main()
     // 注册这个回调函数, 告诉GLFW我们希望每当窗口调整大小的时候调用这个函数
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
-    Shader shader("E:/SourceCodes/MyGithub/CG/LearnOpenGL/LearnOpenGL/Textures/shader.vs", "E:/SourceCodes/MyGithub/CG/LearnOpenGL/LearnOpenGL/Textures/shader.fs");
+    Shader shader("E:/SourceCodes/MyGithub/CG/LearnOpenGL/Transformations/src/shader.vs", "E:/SourceCodes/MyGithub/CG/LearnOpenGL/Transformations/src/shader.fs");
 
     // set up vertex data and configure vertex attributes
     float vertices[] = {
@@ -120,7 +124,7 @@ int main()
     // load image, create texture and generate mipmaps
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(true);
-    unsigned char* data = stbi_load("E:/SourceCodes/MyGithub/CG/LearnOpenGL/LearnOpenGL/Textures/container.jpg", &width, &height, &nrChannels, 0);
+    unsigned char* data = stbi_load("E:/SourceCodes/MyGithub/CG/LearnOpenGL/Transformations/res/container.jpg", &width, &height, &nrChannels, 0);
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -140,7 +144,7 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    data = stbi_load("E:/SourceCodes/MyGithub/CG/LearnOpenGL/LearnOpenGL/Textures/awesomeface.png", &width, &height, &nrChannels, 0);
+    data = stbi_load("E:/SourceCodes/MyGithub/CG/LearnOpenGL/Transformations/res/awesomeface.png", &width, &height, &nrChannels, 0);
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -170,9 +174,17 @@ int main()
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
-        // draw triangle
-        // 用创建的着色器程序对象作为它的参数, 以激活这个对象
+        // create transformations
+        glm::mat4 transform = glm::mat4(1.0f);
+        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        // get matrix's uniform location and set matrix
         shader.use();
+        unsigned int transformLoc = glGetUniformLocation(shader.getId(), "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+
+        // render container
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 

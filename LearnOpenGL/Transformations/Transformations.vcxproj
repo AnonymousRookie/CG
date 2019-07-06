@@ -18,14 +18,10 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="base\glad.c" />
-    <ClCompile Include="HelloWindow\hello_window.cpp" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{9810BB33-8E05-4974-8F20-476A98E5B358}</ProjectGuid>
+    <ProjectGuid>{B55CFB95-2E0C-4593-A4AE-EF718559EC7D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>LearnOpenGL</RootNamespace>
+    <RootNamespace>Transformations</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -93,12 +89,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)\third_party\glad\include;$(SolutionDir)\third_party\glfw-3.3\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\ThirdParty\glad\include;$(SolutionDir)\ThirdParty\glfw\include;$(SolutionDir)\ThirdParty\stb;$(SolutionDir)\ThirdParty\glm</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)\third_party\glfw-3.3\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\ThirdParty\glfw\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -151,6 +147,18 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ThirdParty\glad\src\glad.c" />
+    <ClCompile Include="src\shader.cpp" />
+    <ClCompile Include="src\transformations.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\shader.fs" />
+    <None Include="src\shader.vs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\shader.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

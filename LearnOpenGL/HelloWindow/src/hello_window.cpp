@@ -29,7 +29,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // 创建一个窗口对象, 这个窗口对象存放了所有和窗口相关的数据, 而且会被GLFW的其他函数频繁地用到
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Hello Window", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Hello window", NULL, NULL);
     if (window == NULL) {
         printf("Failed to create GLFW window!\n");
         return -1;

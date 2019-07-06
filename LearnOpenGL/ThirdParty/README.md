@@ -1,0 +1,4 @@
+- glad
+- glfw(v3.3)
+- stb
+- glm(v0.9.4)
