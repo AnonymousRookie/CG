@@ -3,6 +3,9 @@
 #include<eigen3/Eigen/Dense>
 #include<iostream>
 
+#define PI 3.1415926f
+#define DEG2RAD(x) ((x) * PI / 180.0)
+
 int main(){
 
     // Basic Example of cpp
@@ -49,7 +52,17 @@ int main(){
     * PA 0
     */
     // TO DO: Define point P
+    Eigen::Vector3f p(2, 1, 1);
     // TO DO: Define rotation matrix M
+
+    Eigen::Matrix3f M;
+    float rad = DEG2RAD(45);
+    M << std::cos(rad), -std::sin(rad), 1,
+         std::sin(rad), std::cos(rad),  2,
+         0, 0, 1;
+         
     // TO DO: M * P
+    std::cout << "M * p = \n" << M * p << std::endl;
+
     return 0;
 }
