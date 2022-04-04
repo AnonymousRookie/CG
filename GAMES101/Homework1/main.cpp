@@ -6,13 +6,19 @@
 
 constexpr double MY_PI = 3.1415926;
 
+inline double deg_2_rad(float deg) {
+    return deg / 180 * MY_PI;
+}
+
 Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
 {
     Eigen::Matrix4f view = Eigen::Matrix4f::Identity();
 
     Eigen::Matrix4f translate;
-    translate << 1, 0, 0, -eye_pos[0], 0, 1, 0, -eye_pos[1], 0, 0, 1,
-        -eye_pos[2], 0, 0, 0, 1;
+    translate << 1, 0, 0, -eye_pos[0], 
+                 0, 1, 0, -eye_pos[1], 
+                 0, 0, 1, -eye_pos[2], 
+                 0, 0, 0, 1;
 
     view = translate * view;
 
@@ -27,6 +33,16 @@ Eigen::Matrix4f get_model_matrix(float rotation_angle)
     // Create the model matrix for rotating the triangle around the Z axis.
     // Then return it.
 
+    double rad = deg_2_rad(rotation_angle);
+
+    Eigen::Matrix4f translate;
+    translate << std::cos(rad), -std::sin(rad), 0, 0,
+                 std::sin(rad), std::cos(rad),  0, 0,
+                 0,0,1,0,
+                 0,0,0,1;
+
+    model = translate * model;
+
     return model;
 }
 
@@ -40,6 +56,38 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
     // TODO: Implement this function
     // Create the projection matrix for the given parameters.
     // Then return it.
+
+    double t = zNear * tan(deg_2_rad(eye_fov/2));
+    double b = -t;
+    double r = t * aspect_ratio;
+    double l = -r;
+
+    Eigen::Matrix4f persp2ortho = Eigen::Matrix4f::Identity();
+    persp2ortho << zNear, 0, 0, 0,
+                0, zNear, 0, 0,
+                0, 0, zNear+zFar, -zNear*zFar,
+                0,0,1,0;
+
+    
+    Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
+    T << 1, 0, 0, -(r+l)/2,
+         0, 1, 0, -(t+b)/2,
+         0, 0, 1, -(zNear+zFar)/2,
+         0, 0, 0, 1;
+
+    Eigen::Matrix4f S = Eigen::Matrix4f::Identity();
+    S << 2 / (r - l), 0, 0, 0,
+         0, 2 / (t - b), 0, 0, 
+         0, 0, 2 / (zNear - zFar), 0,
+         0, 0, 0, 1;
+
+
+    Eigen::Matrix4f ortho = Eigen::Matrix4f::Identity();
+    ortho = S * T;
+
+    
+    projection = ortho * persp2ortho;
+
 
     return projection;
 }
