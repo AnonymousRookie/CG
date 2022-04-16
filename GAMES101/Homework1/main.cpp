@@ -46,6 +46,36 @@ Eigen::Matrix4f get_model_matrix(float rotation_angle)
     return model;
 }
 
+// 得到绕任意过原点的轴的旋转变换矩阵
+Eigen::Matrix4f get_rotation(Eigen::Vector3f axis, float angle)
+{
+    // Rotation by angle rotation_angle around axis
+
+    Eigen::Matrix3f I = Eigen::Matrix3f::Identity();
+
+    double nx = axis[0];
+    double ny = axis[1];
+    double nz = axis[2];
+
+    Eigen::Matrix3f N;
+    N << 0, -nz, ny,
+         nz, 0, -nx,
+         -ny, nx, 0;
+
+    double rad = deg_2_rad(angle);
+
+    // Rodrigues' Rotation Formula
+    Eigen::Matrix3f R = std::cos(rad) * I + (1 - std::cos(rad)) * axis * axis.transpose() + std::sin(rad) * N;
+
+    Eigen::Matrix4f rotation;
+    rotation << R(0,0), R(0,1), R(0,2), 0,
+                 R(1,0), R(1,1), R(1,2), 0,
+                 R(2,0), R(2,1), R(2,2), 0,
+                 0, 0, 0, 1;
+
+    return rotation;
+}
+
 Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
                                       float zNear, float zFar)
 {
@@ -114,6 +144,8 @@ int main(int argc, const char** argv)
 
     std::vector<Eigen::Vector3i> ind{{0, 1, 2}};
 
+    Eigen::Vector3f axisN = {0, 0, 1};
+
     auto pos_id = r.load_positions(pos);
     auto ind_id = r.load_indices(ind);
 
@@ -123,7 +155,8 @@ int main(int argc, const char** argv)
     if (command_line) {
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
 
-        r.set_model(get_model_matrix(angle));
+        //r.set_model(get_model_matrix(angle));
+        r.set_model(get_rotation(axisN, angle));
         r.set_view(get_view_matrix(eye_pos));
         r.set_projection(get_projection_matrix(45, 1, 0.1, 50));
 
@@ -139,7 +172,8 @@ int main(int argc, const char** argv)
     while (key != 27) {
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
 
-        r.set_model(get_model_matrix(angle));
+        //r.set_model(get_model_matrix(angle));
+        r.set_model(get_rotation(axisN, angle));
         r.set_view(get_view_matrix(eye_pos));
         r.set_projection(get_projection_matrix(45, 1, 0.1, 50));
 
