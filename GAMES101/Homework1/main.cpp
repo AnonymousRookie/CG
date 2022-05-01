@@ -46,7 +46,6 @@ Eigen::Matrix4f get_model_matrix(float rotation_angle)
     return model;
 }
 
-// 得到绕任意过原点的轴的旋转变换矩阵
 Eigen::Matrix4f get_rotation(Eigen::Vector3f axis, float angle)
 {
     // Rotation by angle rotation_angle around axis
@@ -87,7 +86,7 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
     // Create the projection matrix for the given parameters.
     // Then return it.
 
-    double t = zNear * tan(deg_2_rad(eye_fov/2));
+    double t = -zNear * tan(deg_2_rad(eye_fov/2));
     double b = -t;
     double r = t * aspect_ratio;
     double l = -r;
