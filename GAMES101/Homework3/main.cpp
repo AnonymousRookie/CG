@@ -267,7 +267,7 @@ Eigen::Vector3f displacement_fragment_shader(const fragment_shader_payload& payl
     return result_color * 255.f;
 }
 
-
+// 凹凸贴图
 Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
 {
     
@@ -304,6 +304,32 @@ Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
 
     Eigen::Vector3f result_color = {0, 0, 0};
     result_color = normal;
+
+    auto w = payload.texture->width;
+    auto h = payload.texture->height;
+
+    auto u = payload.tex_coords.x();
+    auto v = payload.tex_coords.y();
+
+    auto n = normal.normalized();
+    double x = n.x();
+    double y = n.y();
+    double z = n.z();
+
+    Eigen::Vector3f t = Eigen::Vector3f(x*y/sqrt(x*x+z*z),sqrt(x*x+z*z),z*y/sqrt(x*x+z*z));
+
+    auto b = n.cross(t);
+
+    Eigen::Matrix3f TBN;
+    TBN << t.x(), b.x(), n.x(),
+           t.y(), b.y(), n.y(),
+           t.z(), b.z(), n.z();
+
+    auto dU = kh * kn * (payload.texture->getColor(std::min(u+1.0 / w, 1.0), v).norm() - payload.texture->getColor(u,v).norm());
+    auto dV = kh * kn * (payload.texture->getColor(u, std::min(v+1.0 / h, 1.0)).norm()-payload.texture->getColor(u,v).norm());
+    Eigen::Vector3f ln = Eigen::Vector3f(-dU, -dV, 1);
+
+    result_color = (TBN * ln).normalized();
 
     return result_color * 255.f;
 }
