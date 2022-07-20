@@ -29,8 +29,8 @@ public:
 
     // material properties
     MaterialType materialType;
-    float ior;
-    float Kd, Ks;
+    float ior;     // 折射率(index of refraction)
+    float Kd, Ks;  // diffuse漫反射, specular镜面反射
     Vector3f diffuseColor;
     float specularExponent;
 };
