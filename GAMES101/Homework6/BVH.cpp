@@ -79,6 +79,41 @@ BVHBuildNode* BVHAccel::recursiveBuild(std::vector<Object*> objects)
         auto middling = objects.begin() + (objects.size() / 2);
         auto ending = objects.end();
 
+        bool SAH = true;
+        if (SAH) {
+            int part = 10;
+            auto size = objects.size();
+            int properCut = 0;
+            double mintime = 0x3f3f3f;
+
+            for (int index = 0; index < part; ++index) {
+                middling = objects.begin() + size * index / part;
+                auto leftshapes = std::vector<Object*>(beginning, middling);
+                auto rightshapes = std::vector<Object*>(middling, ending);
+                assert(objects.size() == (leftshapes.size() + rightshapes.size()));
+
+                Bounds3 leftBounds, rightBounds;
+                for (int i = 0; i < leftshapes.size(); ++i) {
+                    leftBounds = Union(leftBounds, leftshapes[i]->getBounds().Centroid());
+                }
+                for (int i = 0; i < rightshapes.size(); ++i) {
+                    rightBounds = Union(rightBounds, rightshapes[i]->getBounds().Centroid());
+                }
+
+                auto leftS = leftBounds.SurfaceArea();
+                auto rightS = rightBounds.SurfaceArea();
+                auto S = leftS + rightS;
+
+                auto time = leftS / S * leftshapes.size() + rightS / S * rightshapes.size();
+                if (time < mintime) {
+                    mintime = time;
+                    properCut = index;
+                }
+            }
+
+            middling = objects.begin() + size * properCut / part;
+        }
+
         auto leftshapes = std::vector<Object*>(beginning, middling);
         auto rightshapes = std::vector<Object*>(middling, ending);
 
