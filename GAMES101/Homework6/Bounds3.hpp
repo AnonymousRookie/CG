@@ -97,19 +97,19 @@ inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
     // dirIsNeg: ray direction(x,y,z), dirIsNeg=[int(x>0),int(y>0),int(z>0)], use this to simplify your logic
     // TODO test if ray bound intersects
     float tMinX = (pMin.x - ray.origin.x) * invDir[0];
-    float tMinY = (pMin.x - ray.origin.y) * invDir[1];
-    float tMinZ = (pMin.x - ray.origin.z) * invDir[2];
+    float tMinY = (pMin.y - ray.origin.y) * invDir[1];
+    float tMinZ = (pMin.z - ray.origin.z) * invDir[2];
 
     float tMaxX = (pMax.x - ray.origin.x) * invDir[0];
-    float tMaxY = (pMax.x - ray.origin.y) * invDir[1];
-    float tMaxZ = (pMax.x - ray.origin.z) * invDir[2];
+    float tMaxY = (pMax.y - ray.origin.y) * invDir[1];
+    float tMaxZ = (pMax.z - ray.origin.z) * invDir[2];
 
     if (!dirIsNeg[0]) std::swap(tMinX, tMaxX);
     if (!dirIsNeg[1]) std::swap(tMinY, tMaxY);
     if (!dirIsNeg[2]) std::swap(tMinZ, tMaxZ);
 
     float tEnter = std::max(tMinX, std::max(tMinY, tMinZ));
-    float tExit = std::max(tMaxX, std::max(tMaxY, tMaxZ));
+    float tExit = std::min(tMaxX, std::min(tMaxY, tMaxZ));
 
     return tEnter < tExit && tExit >= 0;
 }
