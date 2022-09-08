@@ -128,7 +128,7 @@ Vector3f Material::getColorAt(double u, double v) {
     return Vector3f();
 }
 
-
+// 按照该材质的性质，给定入射方向与法向量，用某种分布采样一个出射方向
 Vector3f Material::sample(const Vector3f &wi, const Vector3f &N){
     switch(m_type){
         case DIFFUSE:
@@ -145,6 +145,7 @@ Vector3f Material::sample(const Vector3f &wi, const Vector3f &N){
     }
 }
 
+// 给定一对入射、出射方向与法向量，计算 sample 方法得到该出射方向的概率密度
 float Material::pdf(const Vector3f &wi, const Vector3f &wo, const Vector3f &N){
     switch(m_type){
         case DIFFUSE:
@@ -159,6 +160,7 @@ float Material::pdf(const Vector3f &wi, const Vector3f &wo, const Vector3f &N){
     }
 }
 
+// 给定一对入射、出射方向与法向量，计算这种情况下的 f_r 值
 Vector3f Material::eval(const Vector3f &wi, const Vector3f &wo, const Vector3f &N){
     switch(m_type){
         case DIFFUSE:
