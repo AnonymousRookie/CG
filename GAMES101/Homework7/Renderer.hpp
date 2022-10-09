@@ -2,6 +2,8 @@
 // Created by goksu on 2/25/20.
 //
 #include "Scene.hpp"
+#include <mutex>
+#include <thread>
 
 #pragma once
 struct hit_payload
@@ -16,6 +18,7 @@ class Renderer
 {
 public:
     void Render(const Scene& scene);
-
+    void MultiThreadRender(const Scene& scene);
 private:
+    std::mutex mtx;
 };

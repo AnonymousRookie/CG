@@ -75,7 +75,12 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
 
     // 如果从像素发出的ray打到光源, 返回光源信息
     if (inter.m->hasEmission()) {
-        return inter.m->getEmission();
+        if (0 == depth) {
+            return inter.m->getEmission();
+        }
+        else {
+            return Vector3f(0, 0, 0);
+        }
     }
 
     // 如果从像素发出的ray打到物体

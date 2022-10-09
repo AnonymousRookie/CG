@@ -55,3 +55,72 @@ void Renderer::Render(const Scene& scene)
     }
     fclose(fp);    
 }
+
+// 先将成像平面进行分块，然后利用多线程分块地进行 Path Tracing
+void Renderer::MultiThreadRender(const Scene& scene)
+{
+    std::vector<Vector3f> framebuffer(scene.width * scene.height);
+
+    float scale = tan(deg2rad(scene.fov * 0.5));
+    float imageAspectRatio = scene.width / (float)scene.height;
+    Vector3f eye_pos(278, 273, -800);
+
+    // change the spp value to change sample ammount
+    int spp = 16;
+    std::cout << "SPP: " << spp << "\n";
+
+    int process = 0;
+    auto threadFunc = [&](int lx, int rx, int ly, int ry) {
+        for (uint32_t j = ly; j <= ry; ++j) {
+            int m = j * scene.width + lx;
+            for (uint32_t i = lx; i <= rx; ++i) {
+                // generate primary ray direction
+                float x = (2 * (i + 0.5) / (float)scene.width - 1) *
+                        imageAspectRatio * scale;
+                float y = (1 - 2 * (j + 0.5) / (float)scene.height) * scale;
+
+                Vector3f dir = normalize(Vector3f(-x, y, 1));
+                for (int k = 0; k < spp; k++){
+                    framebuffer[m] += scene.castRay(Ray(eye_pos, dir), 0) / spp;  
+                }
+                m++;
+                process++;
+            }
+
+            std::lock_guard<std::mutex> lock(mtx);
+            UpdateProgress(1.0 * process / scene.width / scene.height);
+        }
+    };
+
+    int bx = 5, by = 5;
+    int nx = (scene.width + bx - 1) / bx;
+    int ny = (scene.height + by - 1) / by;
+
+    std::thread th[bx * by];
+    int idx = 0;
+    for (int i = 0; i < scene.width; i += nx) {
+        for (int j = 0; j < scene.height; j += ny) {
+            int lx = i, rx = std::min(i+nx, scene.width)-1;
+            int ly = j, ry = std::min(j+ny, scene.height)-1;
+            th[idx++] = std::thread(threadFunc, lx, rx, ly, ry);
+        }
+    }
+
+    for (int i = 0; i < bx * by; ++i) {
+        th[i].join();
+    }
+
+    UpdateProgress(1.f);
+
+    // save framebuffer to file
+    FILE* fp = fopen("binary.ppm", "wb");
+    (void)fprintf(fp, "P6\n%d %d\n255\n", scene.width, scene.height);
+    for (auto i = 0; i < scene.height * scene.width; ++i) {
+        static unsigned char color[3];
+        color[0] = (unsigned char)(255 * std::pow(clamp(0, 1, framebuffer[i].x), 0.6f));
+        color[1] = (unsigned char)(255 * std::pow(clamp(0, 1, framebuffer[i].y), 0.6f));
+        color[2] = (unsigned char)(255 * std::pow(clamp(0, 1, framebuffer[i].z), 0.6f));
+        fwrite(color, 1, 3, fp);
+    }
+    fclose(fp);    
+}
