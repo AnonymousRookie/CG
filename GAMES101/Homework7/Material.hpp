@@ -7,7 +7,7 @@
 
 #include "Vector.hpp"
 
-enum MaterialType { DIFFUSE};
+enum MaterialType { DIFFUSE, MICROFACET };
 
 class Material{
 private:
@@ -85,6 +85,41 @@ private:
         return a.x * B + a.y * C + a.z * N;
     }
 
+    // 法线分布函数D
+    float distributionGGX(const Vector3f& N, const Vector3f& H, float roughness)
+    {
+        float a = roughness * roughness;
+        float a2 = a * a;
+        float NdotH = std::max(dotProduct(N, H), 0.0f);
+        float NdotH2 = NdotH * NdotH;
+
+        float numerator = a2;
+        float denominator = NdotH2 * (a2 - 1.0) + 1.0;
+        denominator = M_PI * denominator * denominator;
+        denominator = std::max(denominator, 0.0000001f);
+
+        return numerator / denominator;
+    }
+
+    // 几何函数G
+    float geometrySchlickGGX(float NdotV, float k)
+    {
+        return NdotV / (NdotV * (1.0 - k) + k);
+    }
+    float geometrySmith(const Vector3f& N, const Vector3f& V, const Vector3f& L, float roughness)
+    {
+        float r = (roughness + 1.0);
+        float k = (r * r) / 8.0;
+        float NdotV = std::max(dotProduct(N, V), 0.0f);
+        float NdotL = std::max(dotProduct(N, L), 0.0f);
+
+        float ggx1 = geometrySchlickGGX(NdotL, k);
+        float ggx2 = geometrySchlickGGX(NdotV, k);
+
+        return ggx1 * ggx2;
+    }
+
+
 public:
     MaterialType m_type;
     //Vector3f m_color;
@@ -132,6 +167,7 @@ Vector3f Material::getColorAt(double u, double v) {
 Vector3f Material::sample(const Vector3f &wi, const Vector3f &N){
     switch(m_type){
         case DIFFUSE:
+        case MICROFACET:
         {
             // uniform sample on the hemisphere
             float x_1 = get_random_float(), x_2 = get_random_float();
@@ -149,6 +185,7 @@ Vector3f Material::sample(const Vector3f &wi, const Vector3f &N){
 float Material::pdf(const Vector3f &wi, const Vector3f &wo, const Vector3f &N){
     switch(m_type){
         case DIFFUSE:
+        case MICROFACET:
         {
             // uniform sample probability 1 / (2 * PI)
             if (dotProduct(wo, N) > 0.0f)
@@ -170,6 +207,39 @@ Vector3f Material::eval(const Vector3f &wi, const Vector3f &wo, const Vector3f &
             if (cosalpha > 0.0f) {
                 Vector3f diffuse = Kd / M_PI;
                 return diffuse;
+            }
+            else
+                return Vector3f(0.0f);
+            break;
+        }
+        case MICROFACET:
+        {
+            float cosalpha = dotProduct(N, wo);
+            if (cosalpha > 0.0f) {
+                float roughness = 0.40;
+
+                Vector3f V = -wi;
+                Vector3f L = wo;
+                Vector3f H = normalize(V+L);
+
+                float D = distributionGGX(N, H, roughness);
+                float G = geometrySmith(N, V, L, roughness);
+
+                float F = 0.0f;
+                fresnel(wi, N, 1.85, F);
+
+                float numerator = D * G * F;
+                float denominator = 4 * std::max(dotProduct(N, V), 0.0f) * std::max(dotProduct(N, L), 0.0f);
+
+                Vector3f specular = numerator / std::max(denominator, 0.001f);
+
+                // 能量守恒
+                float ks = F;         // 反射比率
+                float kd = 1.0f - ks; // 折射比率
+
+                Vector3f diffuse = 1.0f / M_PI;
+                
+                return Ks * specular + kd * Kd * diffuse;
             }
             else
                 return Vector3f(0.0f);
