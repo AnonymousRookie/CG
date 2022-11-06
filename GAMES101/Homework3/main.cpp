@@ -93,12 +93,16 @@ Eigen::Vector3f vertex_shader(const vertex_shader_payload& payload)
 
 Eigen::Vector3f normal_fragment_shader(const fragment_shader_payload& payload)
 {
+    // 首先取出当前待着色像素点的法向量，并进行归一化，此时x、y、z都在[-1,1]之间，需要变换到[0,1]之间
+    // 可以先将x、y、z分别加1，得到的结果在[0,2]之间，然后再除以2，变换到[0,1]之间
     Eigen::Vector3f return_color = (payload.normal.head<3>().normalized() + Eigen::Vector3f(1.0f, 1.0f, 1.0f)) / 2.f;
     Eigen::Vector3f result;
+    // x、y、z分别乘以255得到各个颜色值
     result << return_color.x() * 255, return_color.y() * 255, return_color.z() * 255;
     return result;
 }
 
+// 反射向量
 static Eigen::Vector3f reflect(const Eigen::Vector3f& vec, const Eigen::Vector3f& axis)
 {
     auto costheta = vec.dot(axis);
@@ -117,7 +121,8 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
     if (payload.texture)
     {
         // TODO: Get the texture value at the texture coordinates of the current fragment
-        return_color = payload.texture->getColor(payload.tex_coords.x(), payload.tex_coords.y());
+        //return_color = payload.texture->getColor(payload.tex_coords.x(), payload.tex_coords.y());
+        return_color = payload.texture->getColorBilinear(payload.tex_coords.x(), payload.tex_coords.y());
     }
     Eigen::Vector3f texture_color;
     texture_color << return_color.x(), return_color.y(), return_color.z();
@@ -146,8 +151,11 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
         // TODO: For each light source in the code, calculate what the *ambient*, *diffuse*, and *specular* 
         // components are. Then, accumulate that result on the *result_color* object.
         float r = (light.position - point).norm();
+        // Light direction
         Eigen::Vector3f l = (light.position - point).normalized();
+        // Surface normal
         Eigen::Vector3f n = normal.normalized(); 
+        // Viewer direction
         Eigen::Vector3f v = (eye_pos - point).normalized();
 
         // 半程向量
@@ -424,7 +432,8 @@ int main(int argc, const char** argv)
         {
             std::cout << "Rasterizing using the texture shader\n";
             active_shader = texture_fragment_shader;
-            texture_path = "spot_texture.png";
+            //texture_path = "spot_texture.png";
+            texture_path = "spot_texture(300×300).png";
             r.set_texture(Texture(obj_path + texture_path));
         }
         else if (argc == 3 && std::string(argv[2]) == "normal")

@@ -180,12 +180,14 @@ void rst::rasterizer::draw(std::vector<Triangle *> &TriangleList) {
     {
         Triangle newtri = *t;
 
+        // 此处仅进行了MV变换，未进行投影变换。因为投影变换会改变某些透视关系，不便进行光线折射的计算。
         std::array<Eigen::Vector4f, 3> mm {
                 (view * model * t->v[0]),
                 (view * model * t->v[1]),
                 (view * model * t->v[2])
         };
 
+        // 用于后续确定光源与物体表面的作用
         std::array<Eigen::Vector3f, 3> viewspace_pos;
 
         std::transform(mm.begin(), mm.end(), viewspace_pos.begin(), [](auto& v) {
@@ -204,6 +206,8 @@ void rst::rasterizer::draw(std::vector<Triangle *> &TriangleList) {
             vec.z()/=vec.w();
         }
 
+        // 根据原本的每个点上的法向量求出在MV变换之后的法向量
+        // inverse: 逆矩阵，transpose：转置矩阵
         Eigen::Matrix4f inv_trans = (view * model).inverse().transpose();
         Eigen::Vector4f n[] = {
                 inv_trans * to_vec4(t->normal[0], 0.0f),
@@ -227,7 +231,7 @@ void rst::rasterizer::draw(std::vector<Triangle *> &TriangleList) {
 
         for (int i = 0; i < 3; ++i)
         {
-            //view space normal
+            //view space normal，法线向量进行投影变换是没有意义的
             newtri.setNormal(i, n[i].head<3>());
         }
 
@@ -296,16 +300,30 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eig
             if (insideTriangle(center_x, center_y, t.v)) {
                 auto[alpha, beta, gamma] = computeBarycentric2D(center_x, center_y, t.v);
 
+                // 透视矫正插值
                 float Z = 1.0 / (alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
                 float zp = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
                 zp *= Z;
 
                 int buf_index = get_index(x, y);
                 if (zp < depth_buf[buf_index]) {
+                    // 对于我们需要插值的任意属性，其在三角形三点的值为A、B、C，我们需要计算其中某一点的插值I
+                    // 若计算出在投影后的插值I'和重心坐标，在已知三点投影坐标的情况下，可以反推出I
 
+                    // 经过透视矫正处理
+                    /*
+                    auto interpolated_color = (alpha * t.color[0] / v[0].w() + beta * t.color[1] / v[1].w() + gamma * t.color[2] / v[2].w()) * Z;
+                    auto interpolated_normal = (alpha * t.normal[0] / v[0].w() + beta * t.normal[1] / v[1].w() + gamma * t.normal[2] / v[2].w()) * Z;
+                    auto interpolated_texcoords = (alpha * t.tex_coords[0] / v[0].w() + beta * t.tex_coords[1] / v[1].w() + gamma * t.tex_coords[2] / v[2].w()) * Z;
+                    auto interpolated_shadingcoords = (alpha * view_pos[0] / v[0].w() + beta * view_pos[1] / v[1].w() + gamma * view_pos[2] / v[2].w()) * Z;
+                    */
+                    // 未进行透视矫正处理
                     auto interpolated_color = interpolate(alpha, beta, gamma, t.color[0], t.color[1], t.color[2], 1);
                     auto interpolated_normal = interpolate(alpha, beta, gamma, t.normal[0], t.normal[1], t.normal[2], 1).normalized();
                     auto interpolated_texcoords = interpolate(alpha, beta, gamma, t.tex_coords[0], t.tex_coords[1], t.tex_coords[2], 1);
+                    // interpolated_shadingcoords：camera space中正在着色的那个点
+                    // Bling Phong反射模型需要一个叫r的参数，也就是着色点到光源的距离，需要拿光源位置和这个着色点来计算出r，同时得到一个light ray的单位向量（也就是那个所谓的向量l）
+                    // 这个alpha，beta，gamma本质上是需要经过矫正才能用的！但是！其实误差不大，我们就直接拿过来用了。
                     auto interpolated_shadingcoords = interpolate(alpha, beta, gamma, view_pos[0], view_pos[1], view_pos[2], 1);
 
                     fragment_shader_payload payload(interpolated_color, interpolated_normal.normalized(), interpolated_texcoords, texture ? &*texture : nullptr);
