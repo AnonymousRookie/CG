@@ -55,6 +55,7 @@ int main(){
     Eigen::Vector3f p(2, 1, 1);
     // TO DO: Define rotation matrix M
 
+    // M: 将p点绕原点先逆时针旋转45◦，再平移(1,2)
     Eigen::Matrix3f M;
     float rad = DEG2RAD(45);
     M << std::cos(rad), -std::sin(rad), 1,
