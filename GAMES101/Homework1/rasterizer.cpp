@@ -53,7 +53,7 @@ void rst::rasterizer::draw_line(Eigen::Vector3f begin, Eigen::Vector3f end)
             y=y1;
             xe=x2;
         }
-        else
+        else 
         {
             x=x2;
             y=y2;
@@ -141,35 +141,40 @@ void rst::rasterizer::draw(rst::pos_buf_id pos_buffer, rst::ind_buf_id ind_buffe
     auto& buf = pos_buf[pos_buffer.pos_id];
     auto& ind = ind_buf[ind_buffer.ind_id];
 
-    float f1 = (100 - 0.1) / 2.0;
-    float f2 = (100 + 0.1) / 2.0;
+    // zNear: 0.1, ZFar: 100
+    // f1, f2用于将z值从[−1,1]变换到[0.1,100]
+    float f1 = (100 - 0.1) / 2.0;   // 缩放值
+    float f2 = (100 + 0.1) / 2.0;   // 平移值
 
     Eigen::Matrix4f mvp = projection * view * model;
     for (auto& i : ind)
     {
         Triangle t;
 
+        // 把三个顶点转化为齐次坐标，并且乘以mvp矩阵，再把w归一
         Eigen::Vector4f v[] = {
                 mvp * to_vec4(buf[i[0]], 1.0f),
                 mvp * to_vec4(buf[i[1]], 1.0f),
                 mvp * to_vec4(buf[i[2]], 1.0f)
         };
-
         for (auto& vec : v) {
             vec /= vec.w();
         }
 
+        // 视口变换: [-1,1]*[-1,1] -> [0,width]*[0,height]
         for (auto & vert : v)
         {
             vert.x() = 0.5*width*(vert.x()+1.0);
             vert.y() = 0.5*height*(vert.y()+1.0);
+
+            // 由于z值会被用于深度测试，所以必须将其变换到原来的近、远面[ZNear, ZFar]范围内。
+            // 先缩放再平移
             vert.z() = vert.z() * f1 + f2;
         }
 
         for (int i = 0; i < 3; ++i)
         {
-            t.setVertex(i, v[i].head<3>());
-            t.setVertex(i, v[i].head<3>());
+            // head<3>(): 提取前3个元素, Vector4f -> Vector3f
             t.setVertex(i, v[i].head<3>());
         }
 
@@ -231,6 +236,8 @@ void rst::rasterizer::set_pixel(const Eigen::Vector3f& point, const Eigen::Vecto
     //old index: auto ind = point.y() + point.x() * width;
     if (point.x() < 0 || point.x() >= width ||
         point.y() < 0 || point.y() >= height) return;
+
+    // 存储帧缓存的数组的寻址起点是左上角，而待光栅化的顶点的寻址起点是左下角
     auto ind = (height-1-point.y())*width + point.x();
     frame_buf[ind] = color;
 }

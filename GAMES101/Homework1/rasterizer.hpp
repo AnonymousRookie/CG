@@ -12,8 +12,8 @@ using namespace Eigen;
 namespace rst {
 enum class Buffers
 {
-    Color = 1,
-    Depth = 2
+    Color = 1,   // 颜色缓冲区
+    Depth = 2    // 深度缓冲区
 };
 
 inline Buffers operator|(Buffers a, Buffers b)
@@ -71,6 +71,7 @@ class rasterizer
     void rasterize_wireframe(const Triangle& t);
 
   private:
+    // 模型变换：利用基础的变换矩阵(旋转，平移，缩放)将世界中的物体调整至我们想要的地方
     Eigen::Matrix4f model;
     Eigen::Matrix4f view;
     Eigen::Matrix4f projection;

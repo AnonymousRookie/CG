@@ -14,6 +14,7 @@ Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
 {
     Eigen::Matrix4f view = Eigen::Matrix4f::Identity();
 
+    // 将相机位置移动至原点
     Eigen::Matrix4f translate;
     translate << 1, 0, 0, -eye_pos[0], 
                  0, 1, 0, -eye_pos[1], 
@@ -97,7 +98,6 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
                 0, 0, zNear+zFar, -zNear*zFar,
                 0,0,1,0;
 
-    
     Eigen::Matrix4f T = Eigen::Matrix4f::Identity();
     T << 1, 0, 0, -(r+l)/2,
          0, 1, 0, -(t+b)/2,
@@ -110,13 +110,10 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
          0, 0, 2 / (zNear - zFar), 0,
          0, 0, 0, 1;
 
-
     Eigen::Matrix4f ortho = Eigen::Matrix4f::Identity();
     ortho = S * T;
 
-    
     projection = ortho * persp2ortho;
-
 
     return projection;
 }
@@ -126,6 +123,14 @@ int main(int argc, const char** argv)
     float angle = 0;
     bool command_line = false;
     std::string filename = "output.png";
+
+    /*
+    命令行的使用命令:
+    
+    ./Rasterizer: 循环运行程序，创建一个窗口显示，且可以使用A键和D键旋转三角形
+    ./Rasterizer −r 20: 运行程序并将三角形旋转20度，然后将结果存在output.png中
+    ./Rasterizer −r 20 image.png: 运行程序并将三角形旋转20度，然后将结果存在image.png中
+    */ 
 
     if (argc >= 3) {
         command_line = true;
@@ -137,14 +142,18 @@ int main(int argc, const char** argv)
 
     rst::rasterizer r(700, 700);
 
+    // 相机位置
     Eigen::Vector3f eye_pos = {0, 0, 5};
 
+    // 三角形的3个顶点
     std::vector<Eigen::Vector3f> pos{{2, 0, -2}, {0, 2, -2}, {-2, 0, -2}};
 
+    // index
     std::vector<Eigen::Vector3i> ind{{0, 1, 2}};
 
     Eigen::Vector3f axisN = {0, 0, 1};
 
+    // 把pos和ind传给光栅器并且得到了它们在光栅器POS表和INDEX表中的ID
     auto pos_id = r.load_positions(pos);
     auto ind_id = r.load_indices(ind);
 
@@ -168,6 +177,7 @@ int main(int argc, const char** argv)
         return 0;
     }
 
+    // 按ESC键退出循环
     while (key != 27) {
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
 
