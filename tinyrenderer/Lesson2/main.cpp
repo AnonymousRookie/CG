@@ -204,51 +204,6 @@ void triangle(Vec2i *pts, TGAImage &image, TGAColor color) {
 }
 
 int main1(int argc, char** argv) {
-    TGAImage image(100, 100, TGAImage::RGB);
-    line05(13, 20, 80, 40, image, white);
-    line05(20, 13, 40, 80, image, red);
-    line05(80, 40, 13, 20, image, red);
-    image.flip_vertically();
-    image.write_tga_file("output.tga");
-    return 0;
-}
-
-int main2(int argc, char** argv) {
-    Model* model = NULL;
-    if (2 == argc) {
-        model = new Model(argv[1]);
-    }
-    else {
-        model = new Model("obj/african_head.obj");
-    }
-
-    const int width  = 200;
-    const int height = 200;
-
-    TGAImage image(width, height, TGAImage::RGB);
-
-    for (int i = 0; i < model->nfaces(); ++i) {
-        std::vector<int> face = model->face(i);
-        for (int j = 0; j < 3; ++j) {
-            Vec3f v0 = model->vert(face[j]);
-            Vec3f v1 = model->vert(face[(j + 1) % 3]);
-            int x0 = (v0.x + 1.0) * width / 2.0;
-            int y0 = (v0.y + 1.0) * height / 2.0;
-            int x1 = (v1.x + 1.0) * width / 2.0;
-            int y1 = (v1.y + 1.0) * height / 2.0;
-
-            line05(x0, y0, x1, y1, image, white);
-        }
-    }
-    
-    image.flip_vertically();
-    image.write_tga_file("output.tga");
-
-    delete model;
-    return 0;
-}
-
-int main3(int argc, char** argv) {
     const int width = 200;
     const int height = 200;
 
@@ -268,7 +223,7 @@ int main3(int argc, char** argv) {
     return 0;
 }
 
-int main4(int argc, char** argv) {
+int main2(int argc, char** argv) {
     TGAImage frame(200, 200, TGAImage::RGB); 
     Vec2i pts[3] = {Vec2i(10,10), Vec2i(100, 30), Vec2i(190, 160)}; 
     triangle(pts, frame, white);
@@ -277,7 +232,7 @@ int main4(int argc, char** argv) {
     return 0; 
 }
 
-int main5(int argc, char** argv) {
+int main3(int argc, char** argv) {
     Model* model = NULL;
     if (2 == argc) {
         model = new Model(argv[1]);
@@ -286,8 +241,8 @@ int main5(int argc, char** argv) {
         model = new Model("obj/african_head.obj");
     }
 
-    const int width = 200;
-    const int height = 200;
+    const int width = 800;
+    const int height = 800;
 
     TGAImage image(width, height, TGAImage::RGB);
 
@@ -317,8 +272,8 @@ int main(int argc, char** argv) {
         model = new Model("obj/african_head.obj");
     }
 
-    const int width = 200;
-    const int height = 200;
+    const int width = 800;
+    const int height = 800;
 
     TGAImage image(width, height, TGAImage::RGB);
 
